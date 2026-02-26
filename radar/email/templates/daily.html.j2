@@ -179,9 +179,13 @@
       <span class="score-chip">⚡ {{ "%.2f"|format(post.final_score or post.signal_score) }}</span>
     </div>
 
+    {% if post.llm_summary %}
+    <div class="entry-body">{{ post.llm_summary }}</div>
+    {% else %}
     {% set excerpt = (post.body or '')[:120] %}
     {% if excerpt %}
     <div class="entry-body">{{ excerpt }}{% if (post.body or '') | length > 120 %}…{% endif %}</div>
+    {% endif %}
     {% endif %}
   </div>
   {% else %}

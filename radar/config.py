@@ -63,13 +63,17 @@ class Settings(BaseSettings):
     retry_max_wait: float = 30.0
 
     # ── Scheduling ────────────────────────────────────────────────────────────
-    daily_cron: str = "0 16 * * *"
+    daily_cron: str = "0 14,2 * * *"
     weekly_cron: str = "0 20 * * 5"
 
     # ── Report ────────────────────────────────────────────────────────────────
     report_size: int = 5
     weekly_report_size: int = 10
-    duplicate_run_hours: int = 20
+    duplicate_run_hours: int = 10
+
+    # ── LLM Summarization (opt-in) ───────────────────────────────────────────
+    llm_enabled: bool = False
+    llm_model: str = "claude-sonnet-4.6"
 
     # ── Logging ───────────────────────────────────────────────────────────────
     log_level: str = "INFO"

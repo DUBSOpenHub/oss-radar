@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.dubsopenhub.oss-radar</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/greggcochran/ghost-ops/oss-radar/.venv/bin/radar</string>
+    <string>schedule</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/greggcochran/ghost-ops/oss-radar</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>/Users/greggcochran</string>
+  </dict>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/greggcochran/ghost-ops/oss-radar/logs/radar-stdout.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/greggcochran/ghost-ops/oss-radar/logs/radar-stderr.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>Nice</key>
+  <integer>10</integer>
+</dict>
+</plist>

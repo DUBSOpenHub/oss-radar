@@ -128,7 +128,7 @@ class TestDefaults:
 
     def test_default_duplicate_hours(self):
         s = make_settings()
-        assert s.duplicate_run_hours == 20
+        assert s.duplicate_run_hours == 10
 
     def test_db_path_default(self):
         s = make_settings()

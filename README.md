@@ -1,12 +1,21 @@
 # OSS Opportunities Radar
 
-A production-ready Python daemon that monitors four developer platforms daily, extracts genuine open source maintainer pain points, ranks them by signal strength, persists them in a local catalog, and delivers curated intelligence via email — requiring zero interaction after initial setup.
+A ghost-ops Python agent that monitors four developer platforms, extracts genuine open source maintainer pain points, ranks them by signal strength, and delivers curated intelligence via email — requiring zero interaction after initial setup.
+
+**Ghost ops:** you set it up once, point it at your inbox, and forget it exists. Every morning a dark-mode email lands with the 5 highest-signal OSS pain points. Fridays bring the weekly trends. No dashboard. No buttons. Just signal.
 
 ---
 
 ## Architecture
 
 ```
+launchd / GitHub Actions (survives reboots, zero intervention)
+  └── radar schedule
+       ├── Daily job (2x) ── scrape → filter → rank → [LLM summarize] → store → email
+       ├── Weekly job (Fri) ── aggregate → trend analysis → email digest
+       ├── LLM Backend ───── GitHub Models API → Amplifier CLI fallback (opt-in)
+       └── State Store ────── SQLite catalog (WAL mode, 3 tables)
+
 ┌──────────────────────────────────────────────────────────────┐
 │  Entry Points: CLI (Typer) │ APScheduler │ GitHub Actions    │
 └──────────────────────────┬───────────────────────────────────┘
@@ -30,6 +39,11 @@ A production-ready Python daemon that monitors four developer platforms daily, e
          └─────────────────┬──────────────────┘
                            │ List[ScoredPost]
          ┌─────────────────▼──────────────────┐
+         │  LLM Summarizer (opt-in)           │
+         │  GitHub Models → Amplifier fallback │
+         └─────────────────┬──────────────────┘
+                           │
+         ┌─────────────────▼──────────────────┐
          │  BackfillManager (Fallback Ladder)  │
          │  live → archive-7d → archive-30d   │
          │  → partial                         │
@@ -48,22 +62,30 @@ A production-ready Python daemon that monitors four developer platforms daily, e
 
 ## Quick Start
 
+### Path A: Ghost Ops (macOS, one command)
+
 ```bash
-# 1. Install
+cd ~/ghost-ops/oss-radar
+bash install.sh
+# Edit .env with your SMTP credentials
+# Done. Daemon runs 2x/day + weekly digest. Check logs: tail -f logs/radar-stdout.log
+```
+
+### Path B: GitHub Actions (cloud, zero infra)
+
+1. Push this repo to GitHub
+2. Add secrets: `RADAR_SMTP_HOST`, `RADAR_SMTP_PORT`, `RADAR_SMTP_USER`, `RADAR_SMTP_PASSWORD`, `RADAR_EMAIL_FROM`, `RADAR_EMAIL_TO`
+3. Optionally: `RADAR_REDDIT_CLIENT_ID`, `RADAR_REDDIT_CLIENT_SECRET`, `RADAR_LLM_ENABLED=true`
+4. Daily scans run at **6 AM + 6 PM PST** (14:00 + 02:00 UTC)
+5. Weekly digest runs **Friday 12 PM PST** (20:00 UTC)
+
+### Path C: Manual
+
+```bash
 pip install -r requirements.txt
-
-# 2. Configure
-cp .env.example .env
-# Edit .env — fill in SMTP credentials and optionally Reddit API keys
-
-# 3. Run daily report
-radar daily
-
-# 4. Validate connectivity
-radar validate
-
-# 5. Start scheduler daemon
-radar schedule
+cp .env.example .env && nano .env
+radar daily        # one-shot daily report
+radar schedule     # start daemon
 ```
 
 ---
@@ -90,22 +112,37 @@ radar schedule
 
 ---
 
+## LLM Summarization (Opt-in)
+
+Enable AI-powered one-sentence summaries for each pain point in your email reports.
+
+```bash
+# In .env
+RADAR_LLM_ENABLED=true
+RADAR_LLM_MODEL=claude-sonnet-4.6  # or any GitHub Models / Amplifier model
+```
+
+**How it works:**
+- Primary: GitHub Models API via `gh api /models/chat/completions`
+- Fallback: Amplifier CLI via `uv run amplifier`
+- Graceful degradation: if both fail, falls back to 120-char body excerpt
+- Zero new pip dependencies (pure stdlib async subprocess)
+
+**Requirements:** Either `gh` CLI authenticated or Amplifier installed at `~/amplifier`.
+
+---
+
 ## Synthetic Mode (No API Keys)
 
 Run the full pipeline with realistic fake data — perfect for development, demos, and CI:
 
 ```bash
-# Generate 50 synthetic posts, run full pipeline, no email
-radar synth --no-email
-
-# Reproducible output with seed
-radar synth --seed 42 --count 100 --no-email
-
-# Dry run (no DB writes, no email)
-radar synth --dry-run
+radar synth --no-email           # 50 synthetic posts, full pipeline
+radar synth --seed 42 --count 100 --no-email  # reproducible
+radar synth --dry-run            # no DB writes, no email
 ```
 
-Synthetic posts use real pain keywords from the ranking module, so they exercise the full filter → score → backfill → store pipeline. ~60% pass all 3 filter layers, ~40% are intentional noise filtered out at various stages.
+Synthetic posts use real pain keywords from the ranking module, so they exercise the full filter → score → backfill → store pipeline. ~60% pass all 3 filter layers, ~40% are intentional noise.
 
 ---
 
@@ -133,28 +170,6 @@ Posts must pass **all three** layers:
 
 ---
 
-## Pain Categories (15)
-
-| Category | Description |
-|---|---|
-| `burnout` | Maintainer exhaustion and quitting signals |
-| `funding` | Sustainability, donations, sponsorship |
-| `toxic_users` | Harassment, abuse, entitled users |
-| `maintenance_burden` | Issue backlogs, legacy code, tech debt |
-| `dependency_hell` | Version conflicts, transitive deps |
-| `security_pressure` | CVEs, vulnerability disclosures |
-| `breaking_changes` | API breaks, semver violations |
-| `documentation` | Missing, wrong, or stale docs |
-| `contributor_friction` | High barriers to contribution |
-| `corporate_exploitation` | Free-riding, license violations |
-| `scope_creep` | Feature bloat, out-of-scope requests |
-| `tooling_fatigue` | Build tool chaos, CI failures |
-| `governance` | Decision-making, CoC, forks |
-| `abuse` | Spam, DMCA, legal threats |
-| `ci_cd` | Broken pipelines, flaky tests |
-
----
-
 ## Configuration Reference
 
 All environment variables are prefixed `RADAR_`. See `.env.example` for the complete list.
@@ -173,59 +188,56 @@ All environment variables are prefixed `RADAR_`. See `.env.example` for the comp
 | `RADAR_REDDIT_CLIENT_SECRET` | `""` | Reddit API client secret |
 | `RADAR_INFLUENCE_WEIGHT` | `0.4` | Influence signal weight (must sum to 1.0 with engagement) |
 | `RADAR_ENGAGEMENT_WEIGHT` | `0.6` | Engagement signal weight |
-| `RADAR_DAILY_CRON` | `0 16 * * *` | Daily run cron (UTC) |
+| `RADAR_DAILY_CRON` | `0 14,2 * * *` | Daily run cron (UTC) — 6 AM + 6 PM PST |
 | `RADAR_WEEKLY_CRON` | `0 20 * * 5` | Weekly digest cron (UTC) |
-| `RADAR_DUPLICATE_RUN_HOURS` | `20` | Duplicate-run guard window |
+| `RADAR_DUPLICATE_RUN_HOURS` | `10` | Duplicate-run guard window (safe for 2x/day) |
+| `RADAR_LLM_ENABLED` | `false` | Enable LLM pain-point summaries |
+| `RADAR_LLM_MODEL` | `claude-sonnet-4.6` | Model for LLM summarization |
 | `RADAR_LOG_LEVEL` | `INFO` | Logging verbosity |
 | `RADAR_LOG_JSON` | `false` | JSON log format for CI |
 
 ---
 
-## Deployment Guide
+## Ghost Ops Deployment
 
-### GitHub Actions (Recommended)
+### launchd (macOS)
 
-1. Fork this repo
-2. Add secrets in **Settings → Secrets → Actions**:
-   - `RADAR_SMTP_HOST`, `RADAR_SMTP_PORT`, `RADAR_SMTP_USER`, `RADAR_SMTP_PASSWORD`
-   - `RADAR_EMAIL_FROM`, `RADAR_EMAIL_TO`
-   - Optionally: `RADAR_REDDIT_CLIENT_ID`, `RADAR_REDDIT_CLIENT_SECRET`
-3. The daily workflow runs at **08:00 AM PST** (16:00 UTC)
-4. The weekly digest runs **every Friday at 12:00 PM PST** (20:00 UTC)
-
-### Self-hosted Daemon
+The installer creates a persistent `launchd` agent that:
+- Runs `radar schedule` as a KeepAlive daemon (survives reboots)
+- Executes 2x/day scans (6 AM + 6 PM PST) + Friday weekly digest
+- Logs to `~/ghost-ops/oss-radar/logs/`
 
 ```bash
-# Install in a venv
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# Install
+bash install.sh
 
-# Configure
-cp .env.example .env && nano .env
+# View logs
+tail -f ~/ghost-ops/oss-radar/logs/radar-stdout.log
 
-# Start daemon (runs daily + weekly jobs indefinitely)
-radar schedule
+# Manual run
+.venv/bin/radar daily --force
+
+# Stop agent
+launchctl bootout gui/$(id -u)/com.dubsopenhub.oss-radar
+
+# Restart agent
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.dubsopenhub.oss-radar.plist
 ```
 
-### Manual crontab
+### GitHub Actions (cloud)
 
-```bash
-# Edit crontab
-crontab -e
+Two workflow files in `.github/workflows/`:
+- **`daily.yml`** — 2x/day cron: `0 14 * * *` + `0 2 * * *`
+- **`weekly.yml`** — Friday cron: `0 20 * * 5`
 
-# Add daily at 8 AM
-0 8 * * * cd /path/to/oss-radar && .venv/bin/radar daily >> ~/.radar/daily.log 2>&1
-
-# Add weekly digest every Friday at 12 PM
-0 12 * * 5 cd /path/to/oss-radar && .venv/bin/radar weekly >> ~/.radar/weekly.log 2>&1
-```
+Both persist the SQLite catalog as a GitHub Actions artifact (90-day retention) and auto-create Issues on failure.
 
 ---
 
 ## Development
 
 ```bash
-# Run tests
+# Run tests (185 tests, no API keys needed)
 pytest -x
 
 # Run with coverage
@@ -233,7 +245,4 @@ pytest --cov=radar --cov-report=html
 
 # Lint
 ruff check .
-
-# Format
-black .
 ```

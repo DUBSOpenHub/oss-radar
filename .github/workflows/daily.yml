@@ -2,18 +2,28 @@ name: OSS Radar — Daily Report
 
 on:
   schedule:
-    # 16:00 UTC = 8:00 AM PST
-    - cron: "0 16 * * *"
+    # 2x/day: 14:00 UTC (6 AM PST) + 02:00 UTC (6 PM PST)
+    - cron: "0 14 * * *"
+    - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       force:
-        description: "Force run even if within 20h window"
+        description: "Force run even if within dup-guard window"
         required: false
         default: "false"
+      dry_run:
+        description: "Dry run (no email, no DB writes)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   daily:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +36,13 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Download latest catalog artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: radar-catalog
+          path: ~/.radar/
+        continue-on-error: true
 
       - name: Run daily radar
         env:
@@ -40,20 +57,23 @@ jobs:
           RADAR_REDDIT_ENABLED: ${{ secrets.RADAR_REDDIT_ENABLED || 'false' }}
           RADAR_REDDIT_CLIENT_ID: ${{ secrets.RADAR_REDDIT_CLIENT_ID }}
           RADAR_REDDIT_CLIENT_SECRET: ${{ secrets.RADAR_REDDIT_CLIENT_SECRET }}
+          RADAR_LLM_ENABLED: ${{ secrets.RADAR_LLM_ENABLED || 'false' }}
+          RADAR_LLM_MODEL: ${{ secrets.RADAR_LLM_MODEL || 'claude-sonnet-4.6' }}
         run: |
-          FORCE_FLAG=""
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then
-            FORCE_FLAG="--force"
+          FLAGS="--force"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            FLAGS="$FLAGS --dry-run"
           fi
-          radar daily $FORCE_FLAG
+          radar daily $FLAGS
 
-      - name: Upload catalog artifact on failure
-        if: failure()
+      - name: Upload catalog artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: radar-catalog-failure-${{ github.run_id }}
+          name: radar-catalog
           path: ~/.radar/catalog.db
-          retention-days: 7
+          retention-days: 90
+          overwrite: true
 
       - name: Create issue on failure
         if: failure()
@@ -65,5 +85,5 @@ jobs:
               repo: context.repo.repo,
               title: `Daily radar failed on ${new Date().toISOString().split('T')[0]}`,
               body: `The daily radar run failed. See [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
-              labels: ['bug', 'automation']
+              labels: ['bug', 'automated']
             })

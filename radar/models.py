@@ -125,6 +125,7 @@ class ScoredPost(RawPost):
     final_score: float = 0.0
     signal_score: float = 0.0  # alias for final_score
     provenance: str = "live"
+    llm_summary: str = ""
 
     def model_post_init(self, __context: object) -> None:
         super().model_post_init(__context)

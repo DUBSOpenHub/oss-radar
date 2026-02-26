@@ -174,6 +174,18 @@ class PipelineOrchestrator:
         scored = self._rank(filtered)
         logger.info("scoring_done", extra={"scored": len(scored)})
 
+        # 3.5 LLM summarization (opt-in)
+        if getattr(self.config, "llm_enabled", False):
+            try:
+                from radar.summarizer import summarize_posts
+                scored = summarize_posts(
+                    scored[:self.config.report_size],
+                    model=getattr(self.config, "llm_model", None),
+                    dry_run=dry_run,
+                )
+            except Exception as exc:
+                logger.warning("llm_summarization_failed", extra={"error": str(exc)})
+
         # 4. Backfill (inject live posts into DB first so archive can be used)
         if not dry_run:
             for post in scored:
