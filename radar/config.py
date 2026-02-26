@@ -27,16 +27,7 @@ class Settings(BaseSettings):
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
     reddit_user_agent: str = "oss-radar/1.0"
-    reddit_subreddits: List[str] = [
-        "opensource",
-        "programming",
-        "devops",
-        "Python",
-        "rust",
-        "golang",
-        "netsec",
-        "MachineLearning",
-    ]
+    reddit_subreddits: str | List[str] = "opensource,programming,devops,Python,rust,golang,netsec,MachineLearning"
 
     # ── Email / SMTP ──────────────────────────────────────────────────────────
     email_enabled: bool = False
@@ -46,7 +37,7 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_use_tls: bool = True
     email_from: str = ""
-    email_to: List[str] = []
+    email_to: str | List[str] = ""
     to_email: str = ""  # single-address alias
 
     # ── Scoring weights ───────────────────────────────────────────────────────

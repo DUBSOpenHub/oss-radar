@@ -11,7 +11,7 @@ from pydantic import ValidationError
 def make_settings(**kwargs):
     """Create a Settings instance with given overrides, no env bleed."""
     from radar.config import Settings
-    return Settings(**kwargs)
+    return Settings(_env_file=None, **kwargs)
 
 
 class TestWeightValidation:
