@@ -8,19 +8,19 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/greggcochran/ghost-ops/oss-radar/.venv/bin/radar</string>
+    <string>__INSTALL_DIR__/.venv/bin/radar</string>
     <string>schedule</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/greggcochran/ghost-ops/oss-radar</string>
+  <string>__INSTALL_DIR__</string>
 
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
     <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     <key>HOME</key>
-    <string>/Users/greggcochran</string>
+    <string>__HOME__</string>
   </dict>
 
   <key>KeepAlive</key>
@@ -30,10 +30,10 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/greggcochran/ghost-ops/oss-radar/logs/radar-stdout.log</string>
+  <string>__INSTALL_DIR__/logs/radar-stdout.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/greggcochran/ghost-ops/oss-radar/logs/radar-stderr.log</string>
+  <string>__INSTALL_DIR__/logs/radar-stderr.log</string>
 
   <key>ProcessType</key>
   <string>Background</string>

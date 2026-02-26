@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# install.sh — One-command installer for OSS Radar ghost ops daemon
+# install.sh — One-command installer for OSS Radar daemon
 # Usage: bash install.sh
 set -euo pipefail
 
-INSTALL_DIR="$HOME/ghost-ops/oss-radar"
+INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOGS_DIR="$INSTALL_DIR/logs"
 PLIST_NAME="com.dubsopenhub.oss-radar"
 PLIST_SRC="$INSTALL_DIR/$PLIST_NAME.plist"
 PLIST_DST="$HOME/Library/LaunchAgents/$PLIST_NAME.plist"
 VENV_DIR="$INSTALL_DIR/.venv"
 
-echo "🛰  OSS Radar — Ghost Ops Installer"
+echo "🛰  OSS Radar — Installer"
 echo "──────────────────────────────────────"
 
 # 1. Create directories
@@ -50,8 +50,8 @@ if launchctl list | grep -q "$PLIST_NAME" 2>/dev/null; then
   launchctl bootout "gui/$(id -u)/$PLIST_NAME" 2>/dev/null || true
 fi
 
-# Update plist with current user's HOME
-sed "s|/Users/greggcochran|$HOME|g" "$PLIST_SRC" > "$PLIST_DST"
+# Update plist with actual paths
+sed -e "s|__INSTALL_DIR__|$INSTALL_DIR|g" -e "s|__HOME__|$HOME|g" "$PLIST_SRC" > "$PLIST_DST"
 
 # Load
 launchctl bootstrap "gui/$(id -u)" "$PLIST_DST"

@@ -1,8 +1,8 @@
 # OSS Opportunities Radar
 
-A ghost-ops Python agent that monitors four developer platforms, extracts genuine open source maintainer pain points, ranks them by signal strength, and delivers curated intelligence via email — requiring zero interaction after initial setup.
+An autonomous Python agent that monitors four developer platforms, extracts genuine open source maintainer pain points, ranks them by signal strength, and delivers curated intelligence via email — requiring zero interaction after initial setup.
 
-**Ghost ops:** you set it up once, point it at your inbox, and forget it exists. Every morning a dark-mode email lands with the 5 highest-signal OSS pain points. Fridays bring the weekly trends. No dashboard. No buttons. Just signal.
+Set it up once, point it at your inbox, and forget it exists. Every morning a dark-mode email lands with the 5 highest-signal OSS pain points. Fridays bring the weekly trends. No dashboard. No buttons. Just signal.
 
 ---
 
@@ -62,10 +62,10 @@ launchd / GitHub Actions (survives reboots, zero intervention)
 
 ## Quick Start
 
-### Path A: Ghost Ops (macOS, one command)
+### Path A: Local Daemon (macOS, one command)
 
 ```bash
-cd ~/ghost-ops/oss-radar
+cd ~/dev/oss-radar
 bash install.sh
 # Edit .env with your SMTP credentials
 # Done. Daemon runs 2x/day + weekly digest. Check logs: tail -f logs/radar-stdout.log
@@ -198,21 +198,21 @@ All environment variables are prefixed `RADAR_`. See `.env.example` for the comp
 
 ---
 
-## Ghost Ops Deployment
+## Deployment
 
 ### launchd (macOS)
 
 The installer creates a persistent `launchd` agent that:
 - Runs `radar schedule` as a KeepAlive daemon (survives reboots)
 - Executes 2x/day scans (6 AM + 6 PM PST) + Friday weekly digest
-- Logs to `~/ghost-ops/oss-radar/logs/`
+- Logs to `logs/` in the project directory
 
 ```bash
 # Install
 bash install.sh
 
 # View logs
-tail -f ~/ghost-ops/oss-radar/logs/radar-stdout.log
+tail -f logs/radar-stdout.log
 
 # Manual run
 .venv/bin/radar daily --force

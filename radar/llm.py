@@ -1,6 +1,6 @@
 """LLM Backend — GitHub Models API primary, Amplifier CLI fallback.
 
-Ported from DUBSOpenHub/ghost-ops. Pure Python stdlib — no new pip deps.
+Pure Python stdlib LLM backend — no new pip deps.
 Uses `gh api` for GitHub Models and `uv run amplifier` as fallback.
 """
 
