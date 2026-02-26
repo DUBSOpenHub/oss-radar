@@ -19,6 +19,7 @@ structlog==24.4.0
 
 # --- CLI & UI ---
 typer[all]==0.12.5
+click==8.1.8
 rich==13.9.4
 
 # --- Email templates ---

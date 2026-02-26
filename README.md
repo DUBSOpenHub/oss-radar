@@ -72,6 +72,7 @@ radar schedule
 
 | Command | Description | Key Flags |
 |---|---|---|
+| `radar synth` | Full pipeline with synthetic data (no API keys) | `--count N`, `--seed N`, `--dry-run`, `--no-email` |
 | `radar scrape` | Scrape all platforms, store raw posts | `--db-path` |
 | `radar daily` | Full daily pipeline: scrape→filter→rank→email | `--force`, `--dry-run`, `--no-email` |
 | `radar weekly` | Weekly digest from past 7 days of reports | `--dry-run`, `--no-email` |
@@ -86,6 +87,25 @@ radar schedule
 - `0` — full success
 - `1` — partial (< 5 posts, or SMTP retry exhausted)
 - `2` — fatal failure (all scrapers failed, DB unwritable, unhandled exception)
+
+---
+
+## Synthetic Mode (No API Keys)
+
+Run the full pipeline with realistic fake data — perfect for development, demos, and CI:
+
+```bash
+# Generate 50 synthetic posts, run full pipeline, no email
+radar synth --no-email
+
+# Reproducible output with seed
+radar synth --seed 42 --count 100 --no-email
+
+# Dry run (no DB writes, no email)
+radar synth --dry-run
+```
+
+Synthetic posts use real pain keywords from the ranking module, so they exercise the full filter → score → backfill → store pipeline. ~60% pass all 3 filter layers, ~40% are intentional noise filtered out at various stages.
 
 ---
 

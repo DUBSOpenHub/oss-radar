@@ -306,6 +306,90 @@ def stats(
     console.print(table)
 
 
+@app.command()
+def synth(
+    count: int = typer.Option(50, "--count", help="Number of synthetic posts to generate."),
+    seed: Optional[int] = typer.Option(None, "--seed", help="Random seed for reproducibility."),
+    db_path: Optional[str] = typer.Option(None, "--db-path", help="Override catalog DB path."),
+    log_level: str = typer.Option("INFO", "--log-level", help="Logging level."),
+    no_email: bool = typer.Option(False, "--no-email", is_flag=True, help="Skip email send."),
+    dry_run: bool = typer.Option(False, "--dry-run", is_flag=True, help="No writes, no email."),
+) -> None:
+    """Run the full pipeline with synthetic data — no API keys needed."""
+    _setup_logging(log_level)
+    cfg = _get_settings(db_path=db_path, log_level=log_level)
+    if no_email:
+        object.__setattr__(cfg, "email_enabled", False)
+
+    from radar.synthetic import SyntheticDataGenerator
+
+    console.print(f"[bold]🧪 Generating {count} synthetic posts[/] (seed={seed})")
+    generator = SyntheticDataGenerator(count=count, seed=seed)
+    raw_posts = generator.generate()
+    console.print(f"  Generated {len(raw_posts)} posts across {len(set(p.platform for p in raw_posts))} platforms")
+
+    # Run through filter → rank → backfill → store → email pipeline
+    from radar.pipeline import PipelineOrchestrator
+    from radar.ranking.filters import FilterPipeline
+    from radar.ranking.scorer import SignalScorer
+
+    db = _open_db(cfg.db_path)
+
+    pipeline = PipelineOrchestrator(config=cfg, db=db, scrapers=[])
+    # Inject synthetic data directly into the filter stage
+    filtered = pipeline._filter(raw_posts)
+    console.print(f"  After filtering: {len(filtered)} posts (keyword + maintainer + sentiment)")
+
+    scored = pipeline._rank(filtered)
+    console.print(f"  After scoring: {len(scored)} posts ranked")
+
+    if not dry_run:
+        for post in scored:
+            db.upsert_post(post)
+
+    top5 = pipeline.backfill.ensure_five(scored)
+
+    from radar.models import DailyReport
+    from datetime import datetime
+
+    provenance_breakdown = {}
+    for p in top5:
+        tier = p.source_tier or "live"
+        provenance_breakdown[tier] = provenance_breakdown.get(tier, 0) + 1
+
+    report = DailyReport(
+        entries=top5,
+        entry_count=len(top5),
+        provenance_breakdown=provenance_breakdown,
+        scraper_statuses={"synthetic": "ok"},
+        total_collected=len(raw_posts),
+        total_after_filter=len(filtered),
+        is_partial=len(top5) < 5,
+    )
+
+    if not dry_run:
+        today_str = datetime.utcnow().strftime("%Y-%m-%d")
+        report_id = db.create_report("daily", today_str)
+        for rank, post in enumerate(top5, start=1):
+            post_db_id = db.upsert_post(post)
+            if post_db_id is not None:
+                db.add_report_entry(report_id, post_db_id, rank, post.source_tier or "live")
+                db.mark_reported(post_db_id)
+        console.print(f"  Stored report #{report_id} with {len(top5)} entries")
+
+    if pipeline.email_sender and cfg.email_enabled and not no_email:
+        pipeline.email_sender.send_daily(report)
+        console.print("  📧 Email sent")
+
+    console.print()
+    _print_report_table(top5)
+
+    if report.is_partial:
+        console.print(f"\n[yellow]⚠️ Partial report: only {len(top5)} entries met threshold[/]")
+    else:
+        console.print(f"\n[green]✅ Full report: {len(top5)} entries[/]")
+
+
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
