@@ -1,0 +1,53 @@
+name: OSS Radar — Weekly Digest
+
+on:
+  schedule:
+    # 20:00 UTC Friday = 12:00 PM PST
+    - cron: "0 20 * * 5"
+  workflow_dispatch: {}
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download latest catalog artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: radar-catalog-failure-${{ github.run_id }}
+          path: ~/.radar/
+        continue-on-error: true
+
+      - name: Run weekly digest
+        env:
+          RADAR_DB_PATH: ~/.radar/catalog.db
+          RADAR_EMAIL_ENABLED: "true"
+          RADAR_SMTP_HOST: ${{ secrets.RADAR_SMTP_HOST }}
+          RADAR_SMTP_PORT: ${{ secrets.RADAR_SMTP_PORT }}
+          RADAR_SMTP_USER: ${{ secrets.RADAR_SMTP_USER }}
+          RADAR_SMTP_PASSWORD: ${{ secrets.RADAR_SMTP_PASSWORD }}
+          RADAR_EMAIL_FROM: ${{ secrets.RADAR_EMAIL_FROM }}
+          RADAR_EMAIL_TO: ${{ secrets.RADAR_EMAIL_TO }}
+          RADAR_REDDIT_ENABLED: ${{ secrets.RADAR_REDDIT_ENABLED || 'false' }}
+          RADAR_REDDIT_CLIENT_ID: ${{ secrets.RADAR_REDDIT_CLIENT_ID }}
+          RADAR_REDDIT_CLIENT_SECRET: ${{ secrets.RADAR_REDDIT_CLIENT_SECRET }}
+        run: radar weekly
+
+      - name: Upload catalog artifact on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-catalog-weekly-failure-${{ github.run_id }}
+          path: ~/.radar/catalog.db
+          retention-days: 7

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSS Radar Daily Intel</title>
+  <style>
+    /* Forced dark-mode baseline */
+    body {
+      margin: 0; padding: 0;
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrapper { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
+
+    /* Gradient header */
+    .header {
+      background: linear-gradient(135deg, #161b22 0%, #1f2937 50%, #111827 100%);
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 32px 28px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #58a6ff, #79c0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header .subtitle {
+      color: #8b949e;
+      font-size: 13px;
+      margin: 0;
+    }
+
+    /* Entry card */
+    .entry {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .entry:hover { border-color: #58a6ff; }
+
+    .rank-badge {
+      display: inline-block;
+      font-size: 22px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .entry-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e6edf3;
+      vertical-align: middle;
+    }
+    .entry-meta {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-platform { background: #1f6feb; color: #e6edf3; }
+    .badge-tier-live { background: #196c2e; color: #3fb950; }
+    .badge-tier-archive7d { background: #9e6a03; color: #d29922; }
+    .badge-tier-archive30d { background: #6e40c9; color: #bc8cff; }
+    .badge-tier-partial { background: #8d1519; color: #f85149; }
+    .badge-pain {
+      background: #21262d;
+      color: #8b949e;
+      border: 1px solid #30363d;
+    }
+    .score-chip {
+      font-size: 12px;
+      color: #79c0ff;
+      font-family: monospace;
+    }
+    .entry-body {
+      margin-top: 12px;
+      color: #8b949e;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .partial-banner {
+      background: #161b22;
+      border: 1px solid #8d1519;
+      border-left: 4px solid #f85149;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      color: #f85149;
+      font-size: 13px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      color: #484f58;
+      font-size: 12px;
+    }
+
+    @media (prefers-color-scheme: light) {
+      body { background: #ffffff; color: #24292f; }
+      .header { background: linear-gradient(135deg, #f6f8fa, #eaeef2); border-color: #d0d7de; }
+      .entry { background: #f6f8fa; border-color: #d0d7de; }
+      .badge-pain { background: #f6f8fa; color: #57606a; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🛰 OSS Radar Daily Intel</h1>
+    <p class="subtitle">{{ date_str }} &nbsp;·&nbsp; {{ report.entry_count }} signal{{ 's' if report.entry_count != 1 else '' }} detected</p>
+  </div>
+
+  {% if report.is_partial %}
+  <div class="partial-banner">
+    ⚠️ <strong>Partial Report</strong> — fewer than 5 qualifying posts were found today.
+    Items below may include archived signals from the past 30 days.
+  </div>
+  {% endif %}
+
+  <!-- Entries -->
+  {% set entries = report.entries or report.top_posts %}
+  {% for post in entries %}
+  {% set rank = loop.index %}
+  <div class="entry">
+    <div>
+      <span class="rank-badge">
+        {%- if rank == 1 %}🥇{%- elif rank == 2 %}🥈{%- elif rank == 3 %}🥉{%- else %}#{{ rank }}{%- endif %}
+      </span>
+      <a class="entry-title" href="{{ post.url }}">{{ post.title | truncate(90) }}</a>
+    </div>
+
+    <div class="entry-meta">
+      <span class="badge badge-platform">{{ post.platform }}</span>
+
+      {% set tier = post.source_tier or post.backfill_source or 'live' %}
+      {% if tier == 'live' %}
+        <span class="badge badge-tier-live">live</span>
+      {% elif tier == 'archive-7d' or tier == 'archive_7d' %}
+        <span class="badge badge-tier-archive7d">archive-7d</span>
+      {% elif tier == 'archive-30d' or tier == 'archive_30d' %}
+        <span class="badge badge-tier-archive30d">archive-30d</span>
+      {% else %}
+        <span class="badge badge-tier-partial">partial</span>
+      {% endif %}
+
+      {% for cat in post.pain_categories[:3] %}
+        <span class="badge badge-pain">{{ cat.value if cat.value is defined else cat }}</span>
+      {% endfor %}
+
+      <span class="score-chip">⚡ {{ "%.2f"|format(post.final_score or post.signal_score) }}</span>
+    </div>
+
+    {% set excerpt = (post.body or '')[:120] %}
+    {% if excerpt %}
+    <div class="entry-body">{{ excerpt }}{% if (post.body or '') | length > 120 %}…{% endif %}</div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="entry" style="text-align:center; color:#484f58;">
+    No qualifying posts found for this period.
+  </div>
+  {% endfor %}
+
+  <div class="footer">
+    <p>OSS Radar &nbsp;·&nbsp; Generated {{ date_str }} &nbsp;·&nbsp; <a href="https://github.com">Unsubscribe</a></p>
+  </div>
+</div>
+</body>
+</html>
