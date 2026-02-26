@@ -143,6 +143,26 @@ class PipelineOrchestrator:
     # Public API
     # ------------------------------------------------------------------
 
+    def run_scrape_only(self) -> int:
+        """Scrape → filter → score → store. No email, no report record.
+
+        Returns the number of new posts stored.
+        """
+        raw_posts, statuses = self._collect()
+        logger.info("scrape_only.collected", extra={"total": len(raw_posts)})
+
+        filtered = self._filter(raw_posts)
+        logger.info("scrape_only.filtered", extra={"after_filter": len(filtered)})
+
+        scored = self._rank(filtered)
+        stored = 0
+        for post in scored:
+            if self.db.upsert_post(post) is not None:
+                stored += 1
+
+        logger.info("scrape_only.stored", extra={"stored": stored, "statuses": statuses})
+        return stored
+
     def run_daily(
         self,
         *,

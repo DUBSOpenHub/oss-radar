@@ -1,10 +1,9 @@
-name: OSS Radar — Daily Report
+name: OSS Radar — Hourly Scrape + Daily Report
 
 on:
   schedule:
-    # 2x/day: 14:00 UTC (6 AM PST) + 02:00 UTC (6 PM PST)
-    - cron: "0 14 * * *"
-    - cron: "0 2 * * *"
+    # Hourly scrape (collect posts, no email)
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -60,11 +59,18 @@ jobs:
           RADAR_LLM_ENABLED: ${{ secrets.RADAR_LLM_ENABLED || 'false' }}
           RADAR_LLM_MODEL: ${{ secrets.RADAR_LLM_MODEL || 'claude-sonnet-4.6' }}
         run: |
-          FLAGS="--force"
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            FLAGS="$FLAGS --dry-run"
+          # Always scrape (hourly)
+          radar scrape
+
+          # Send daily email report only at 14:00 UTC (6 AM PST) or on manual dispatch
+          HOUR=$(date -u +%H)
+          if [ "$HOUR" = "14" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            FLAGS="--force"
+            if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+              FLAGS="$FLAGS --dry-run"
+            fi
+            radar daily $FLAGS
           fi
-          radar daily $FLAGS
 
       - name: Upload catalog artifact
         if: always()

@@ -68,7 +68,7 @@ launchd / GitHub Actions (survives reboots, zero intervention)
 cd ~/dev/oss-radar
 bash install.sh
 # Edit .env with your SMTP credentials
-# Done. Daemon runs 2x/day + weekly digest. Check logs: tail -f logs/radar-stdout.log
+# Done. Daemon scrapes hourly, emails daily + weekly digest. Check logs: tail -f logs/radar-stdout.log
 ```
 
 ### Path B: GitHub Actions (cloud, zero infra)
@@ -76,7 +76,7 @@ bash install.sh
 1. Push this repo to GitHub
 2. Add secrets: `RADAR_SMTP_HOST`, `RADAR_SMTP_PORT`, `RADAR_SMTP_USER`, `RADAR_SMTP_PASSWORD`, `RADAR_EMAIL_FROM`, `RADAR_EMAIL_TO`
 3. Optionally: `RADAR_REDDIT_CLIENT_ID`, `RADAR_REDDIT_CLIENT_SECRET`, `RADAR_LLM_ENABLED=true`
-4. Daily scans run at **6 AM + 6 PM PST** (14:00 + 02:00 UTC)
+4. Hourly scrapes run every hour; daily email report at **6 AM PST** (14:00 UTC)
 5. Weekly digest runs **Friday 12 PM PST** (20:00 UTC)
 
 ### Path C: Manual
@@ -188,9 +188,10 @@ All environment variables are prefixed `RADAR_`. See `.env.example` for the comp
 | `RADAR_REDDIT_CLIENT_SECRET` | `""` | Reddit API client secret |
 | `RADAR_INFLUENCE_WEIGHT` | `0.4` | Influence signal weight (must sum to 1.0 with engagement) |
 | `RADAR_ENGAGEMENT_WEIGHT` | `0.6` | Engagement signal weight |
-| `RADAR_DAILY_CRON` | `0 14,2 * * *` | Daily run cron (UTC) — 6 AM + 6 PM PST |
+| `RADAR_SCRAPE_CRON` | `0 * * * *` | Hourly scrape cron (UTC) — collect only, no email |
+| `RADAR_DAILY_CRON` | `0 14 * * *` | Daily email report cron (UTC) — 6 AM PST |
 | `RADAR_WEEKLY_CRON` | `0 20 * * 5` | Weekly digest cron (UTC) |
-| `RADAR_DUPLICATE_RUN_HOURS` | `10` | Duplicate-run guard window (safe for 2x/day) |
+| `RADAR_DUPLICATE_RUN_HOURS` | `10` | Duplicate-run guard window for daily email |
 | `RADAR_LLM_ENABLED` | `false` | Enable LLM pain-point summaries |
 | `RADAR_LLM_MODEL` | `claude-sonnet-4.6` | Model for LLM summarization |
 | `RADAR_LOG_LEVEL` | `INFO` | Logging verbosity |
@@ -204,7 +205,7 @@ All environment variables are prefixed `RADAR_`. See `.env.example` for the comp
 
 The installer creates a persistent `launchd` agent that:
 - Runs `radar schedule` as a KeepAlive daemon (survives reboots)
-- Executes 2x/day scans (6 AM + 6 PM PST) + Friday weekly digest
+- Executes hourly scrapes + daily email (6 AM PST) + Friday weekly digest
 - Logs to `logs/` in the project directory
 
 ```bash
@@ -227,7 +228,7 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.dubsopenhub.oss-rada
 ### GitHub Actions (cloud)
 
 Two workflow files in `.github/workflows/`:
-- **`daily.yml`** — 2x/day cron: `0 14 * * *` + `0 2 * * *`
+- **`daily.yml`** — Hourly cron: `0 * * * *` (scrape every hour, email at 14:00 UTC)
 - **`weekly.yml`** — Friday cron: `0 20 * * 5`
 
 Both persist the SQLite catalog as a GitHub Actions artifact (90-day retention) and auto-create Issues on failure.

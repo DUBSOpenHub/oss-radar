@@ -68,7 +68,7 @@ def scrape(
     db_path: Optional[str] = typer.Option(None, "--db-path", help="Override catalog DB path."),
     log_level: str = typer.Option("INFO", "--log-level", help="Logging level."),
 ) -> None:
-    """Scrape all platforms and persist raw posts to the catalog."""
+    """Scrape all platforms, filter, score, and store. No email sent."""
     _setup_logging(log_level)
     cfg = _get_settings(db_path=db_path, log_level=log_level)
     db = _open_db(cfg.db_path)
@@ -76,12 +76,8 @@ def scrape(
     from radar.pipeline import PipelineOrchestrator
 
     pipeline = PipelineOrchestrator(config=cfg, db=db)
-    raw, statuses = pipeline._collect()
-
-    console.print(f"[bold green]Scraped {len(raw)} posts[/]")
-    for platform, status in statuses.items():
-        colour = "green" if status == "ok" else ("yellow" if status == "empty" else "red")
-        console.print(f"  [{colour}]{platform}: {status}[/]")
+    stored = pipeline.run_scrape_only()
+    console.print(f"[bold green]Scraped and stored {stored} qualifying posts[/]")
 
 
 @app.command()
@@ -251,14 +247,14 @@ def schedule(
     db_path: Optional[str] = typer.Option(None, "--db-path", help="Override catalog DB path."),
     log_level: str = typer.Option("INFO", "--log-level", help="Logging level."),
 ) -> None:
-    """Start the APScheduler daemon (daily + weekly cron jobs)."""
+    """Start the APScheduler daemon (hourly scrape + daily email + weekly digest)."""
     _setup_logging(log_level)
     cfg = _get_settings(db_path=db_path, log_level=log_level)
 
     from radar.scheduling.scheduler import RadarScheduler
 
     console.print(
-        f"[bold]Starting scheduler[/]  daily={cfg.daily_cron!r}  weekly={cfg.weekly_cron!r}"
+        f"[bold]Starting scheduler[/]  scrape={cfg.scrape_cron!r}  daily={cfg.daily_cron!r}  weekly={cfg.weekly_cron!r}"
     )
     scheduler = RadarScheduler(cfg)
     try:

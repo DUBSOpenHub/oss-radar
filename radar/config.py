@@ -54,7 +54,8 @@ class Settings(BaseSettings):
     retry_max_wait: float = 30.0
 
     # ── Scheduling ────────────────────────────────────────────────────────────
-    daily_cron: str = "0 14,2 * * *"
+    scrape_cron: str = "0 * * * *"
+    daily_cron: str = "0 14 * * *"
     weekly_cron: str = "0 20 * * 5"
 
     # ── Report ────────────────────────────────────────────────────────────────

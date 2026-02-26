@@ -21,11 +21,13 @@ class RadarScheduler:
 
     def start(self) -> None:
         """Register jobs and start the blocking scheduler."""
+        self._register_scrape()
         self._register_daily()
         self._register_weekly()
         logger.info(
             "scheduler_starting",
             extra={
+                "scrape_cron": self.config.scrape_cron,
                 "daily_cron": self.config.daily_cron,
                 "weekly_cron": self.config.weekly_cron,
             },
@@ -40,6 +42,28 @@ class RadarScheduler:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _register_scrape(self) -> None:
+        cron_parts = self.config.scrape_cron.split()
+        if len(cron_parts) != 5:
+            raise ValueError(f"Invalid scrape_cron: {self.config.scrape_cron!r}")
+
+        minute, hour, day, month, day_of_week = cron_parts
+        self._scheduler.add_job(
+            func=self._run_scrape,
+            trigger=CronTrigger(
+                minute=minute,
+                hour=hour,
+                day=day,
+                month=month,
+                day_of_week=day_of_week,
+                timezone="UTC",
+            ),
+            id="hourly_scrape",
+            name="OSS Radar Hourly Scrape",
+            replace_existing=True,
+        )
+        logger.info("job_registered", extra={"job": "hourly_scrape"})
 
     def _register_daily(self) -> None:
         cron_parts = self.config.daily_cron.split()
@@ -84,6 +108,18 @@ class RadarScheduler:
             replace_existing=True,
         )
         logger.info("job_registered", extra={"job": "weekly_digest"})
+
+    def _run_scrape(self) -> None:
+        """Execute scrape-only (no email, no report record)."""
+        try:
+            from radar.pipeline import PipelineOrchestrator
+            from radar.storage.database import Database
+
+            db = Database(self.config.db_path)
+            pipeline = PipelineOrchestrator(config=self.config, db=db)
+            pipeline.run_scrape_only()
+        except Exception as exc:
+            logger.error("scheduled_scrape_failed", extra={"error": str(exc)}, exc_info=True)
 
     def _run_daily(self) -> None:
         """Execute the daily pipeline (imported lazily to avoid circular imports)."""
