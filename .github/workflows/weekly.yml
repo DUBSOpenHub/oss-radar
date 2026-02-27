@@ -42,9 +42,9 @@ jobs:
       - name: Run weekly digest
         env:
           RADAR_DB_PATH: ~/.radar/catalog.db
-          RADAR_EMAIL_ENABLED: "true"
-          RADAR_SMTP_HOST: ${{ secrets.RADAR_SMTP_HOST }}
-          RADAR_SMTP_PORT: ${{ secrets.RADAR_SMTP_PORT }}
+          RADAR_EMAIL_ENABLED: ${{ secrets.RADAR_EMAIL_TO != '' && 'true' || 'false' }}
+          RADAR_SMTP_HOST: ${{ secrets.RADAR_SMTP_HOST || 'localhost' }}
+          RADAR_SMTP_PORT: ${{ secrets.RADAR_SMTP_PORT || '587' }}
           RADAR_SMTP_USER: ${{ secrets.RADAR_SMTP_USER }}
           RADAR_SMTP_PASSWORD: ${{ secrets.RADAR_SMTP_PASSWORD }}
           RADAR_EMAIL_FROM: ${{ secrets.RADAR_EMAIL_FROM }}
