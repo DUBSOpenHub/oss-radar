@@ -48,14 +48,14 @@ class TestSMTPValidation:
                 # no email_to
             )
 
-    def test_email_enabled_localhost_no_user_raises(self):
-        with pytest.raises(ValidationError):
-            make_settings(
-                email_enabled=True,
-                smtp_host="localhost",
-                email_to=["test@example.com"],
-                # no smtp_user
-            )
+    def test_email_enabled_localhost_no_user_ok(self):
+        """Localhost without smtp_user is valid — sendmail fallback handles it."""
+        s = make_settings(
+            email_enabled=True,
+            smtp_host="localhost",
+            email_to=["test@example.com"],
+        )
+        assert s.email_enabled is True
 
     def test_email_enabled_with_all_credentials_ok(self):
         s = make_settings(

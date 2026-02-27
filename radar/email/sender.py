@@ -1,9 +1,14 @@
-"""SMTP email sender with Jinja2 templates for OSS Radar reports."""
+"""SMTP email sender with Jinja2 templates for OSS Radar reports.
+
+Delivery ladder: SMTP → local sendmail binary (zero-config fallback).
+"""
 
 from __future__ import annotations
 
 import logging
+import shutil
 import smtplib
+import subprocess
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -26,9 +31,10 @@ _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
 class EmailSender:
-    """Renders Jinja2 templates and dispatches via SMTP with STARTTLS.
+    """Renders Jinja2 templates and dispatches email.
 
-    Retries SMTP send once after 60 seconds on failure.
+    Delivery ladder: SMTP (if configured) → local sendmail binary fallback.
+    Retries SMTP once after 5 seconds on failure before falling back.
     """
 
     def __init__(self, config: Settings) -> None:
@@ -67,7 +73,7 @@ class EmailSender:
         return template.render(**context)
 
     def _dispatch(self, subject: str, html: str, dry_run: bool = False) -> bool:
-        """Send multipart MIME email; retry once on failure."""
+        """Send email via SMTP, falling back to local sendmail binary."""
         if dry_run:
             logger.info("dry_run_email_skipped", extra={"subject": subject})
             return True
@@ -79,25 +85,27 @@ class EmailSender:
 
         msg = self._build_mime(subject=subject, html=html, recipients=recipients)
 
-        for attempt in range(1, 3):
-            try:
-                self._send_smtp(msg, recipients)
-                logger.info(
-                    "email_sent",
-                    extra={"subject": subject, "recipients": recipients},
-                )
-                return True
-            except Exception as exc:
-                logger.warning(
-                    "smtp_send_failed",
-                    extra={"attempt": attempt, "error": str(exc)},
-                )
-                if attempt < 2:
-                    logger.info("smtp_retry_wait", extra={"seconds": 60})
-                    time.sleep(60)
+        # --- Tier 1: SMTP ---
+        if self.config.smtp_host and self.config.smtp_user:
+            for attempt in range(1, 3):
+                try:
+                    self._send_smtp(msg, recipients)
+                    logger.info(
+                        "email_sent",
+                        extra={"via": "smtp", "subject": subject, "recipients": recipients},
+                    )
+                    return True
+                except Exception as exc:
+                    logger.warning(
+                        "smtp_send_failed",
+                        extra={"attempt": attempt, "error": str(exc)},
+                    )
+                    if attempt < 2:
+                        time.sleep(5)
+            logger.warning("smtp_exhausted_trying_sendmail", extra={"subject": subject})
 
-        logger.error("smtp_exhausted", extra={"subject": subject})
-        return False
+        # --- Tier 2: local sendmail binary ---
+        return self._send_via_sendmail(msg, recipients, subject)
 
     def _build_mime(
         self, subject: str, html: str, recipients: List[str]
@@ -127,6 +135,36 @@ class EmailSender:
                 to_addrs=recipients,
                 msg=msg.as_string(),
             )
+
+    def _send_via_sendmail(
+        self, msg: MIMEMultipart, recipients: List[str], subject: str
+    ) -> bool:
+        """Deliver via the local sendmail binary (macOS/Linux)."""
+        sendmail = shutil.which("sendmail") or "/usr/sbin/sendmail"
+        if not Path(sendmail).exists():
+            logger.error("sendmail_not_found", extra={"path": sendmail})
+            return False
+
+        try:
+            proc = subprocess.run(
+                [sendmail, "-t", "-oi"],
+                input=msg.as_string().encode(),
+                capture_output=True,
+                timeout=30,
+            )
+            if proc.returncode == 0:
+                logger.info(
+                    "email_sent",
+                    extra={"via": "sendmail", "subject": subject, "recipients": recipients},
+                )
+                return True
+            logger.error(
+                "sendmail_failed",
+                extra={"exit_code": proc.returncode, "stderr": proc.stderr.decode()[:300]},
+            )
+        except Exception as exc:
+            logger.error("sendmail_error", extra={"error": str(exc)})
+        return False
 
     @staticmethod
     def _plaintext_fallback(html: str) -> str:

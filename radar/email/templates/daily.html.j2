@@ -5,128 +5,242 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OSS Radar Daily Intel</title>
   <style>
-    /* Forced dark-mode baseline */
+    /* ── shadcn/ui zinc dark palette ────────────── */
     body {
       margin: 0; padding: 0;
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: #09090b;
+      color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       font-size: 14px;
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-    a { color: #58a6ff; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a { color: #fafafa; text-decoration: underline; text-decoration-color: #3f3f46; text-underline-offset: 4px; }
+    a:hover { text-decoration-color: #a1a1aa; }
 
-    .wrapper { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
+    .wrapper { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
 
-    /* Gradient header */
+    /* ── Header ─────────────────────────────────── */
     .header {
-      background: linear-gradient(135deg, #161b22 0%, #1f2937 50%, #111827 100%);
-      border: 1px solid #30363d;
-      border-radius: 12px;
-      padding: 32px 28px;
-      margin-bottom: 24px;
       text-align: center;
+      padding: 48px 32px 40px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid #27272a;
+    }
+    .header-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 16px;
     }
     .header h1 {
       margin: 0 0 8px;
-      font-size: 26px;
+      font-size: 30px;
       font-weight: 700;
-      background: linear-gradient(90deg, #58a6ff, #79c0ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      letter-spacing: -0.6px;
+      color: #fafafa;
     }
     .header .subtitle {
-      color: #8b949e;
-      font-size: 13px;
+      color: #a1a1aa;
+      font-size: 14px;
       margin: 0;
     }
-
-    /* Entry card */
-    .entry {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      padding: 20px 22px;
-      margin-bottom: 16px;
-      position: relative;
-    }
-    .entry:hover { border-color: #58a6ff; }
-
-    .rank-badge {
-      display: inline-block;
-      font-size: 22px;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    .entry-title {
-      font-size: 16px;
+    .header .subtitle strong {
+      color: #fafafa;
       font-weight: 600;
-      color: #e6edf3;
-      vertical-align: middle;
     }
-    .entry-meta {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
+
+    /* ── Stats row ──────────────────────────────── */
+    .stats-card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
     }
-    .badge {
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .stats-table td {
+      text-align: center;
+      padding: 16px 8px;
+      width: 25%;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fafafa;
+      display: block;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #71717a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-top: 6px;
+    }
+    .stat-divider {
+      width: 1px;
+      background: #27272a;
+    }
+
+    /* ── Partial banner ─────────────────────────── */
+    .partial-banner {
+      background: #18181b;
+      border: 1px solid #422006;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      color: #fbbf24;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .partial-banner strong { color: #fde68a; }
+
+    /* ── Entry card ─────────────────────────────── */
+    .entry {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .entry:hover { border-color: #3f3f46; }
+
+    .entry-inner { padding: 24px; }
+
+    /* Rank + Score top bar */
+    .entry-topbar {
+      margin-bottom: 12px;
+    }
+    .entry-topbar table { width: 100%; border-collapse: collapse; }
+    .rank-pill {
       display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
+      background: #27272a;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      letter-spacing: 0.3px;
+    }
+    .entry-rank-1 .rank-pill { background: #422006; color: #fbbf24; }
+    .entry-rank-2 .rank-pill { background: #27272a; color: #d4d4d8; }
+    .entry-rank-3 .rank-pill { background: #292524; color: #d6956b; }
+
+    .score-pill {
+      display: inline-block;
+      background: #09090b;
+      border: 1px solid #27272a;
+      color: #fafafa;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      letter-spacing: -0.3px;
+    }
+
+    /* Title */
+    .entry-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+      line-height: 1.4;
+      margin-bottom: 14px;
+      letter-spacing: -0.2px;
+    }
+    .entry-title a { color: #fafafa; text-decoration: none; }
+    .entry-title a:hover { text-decoration: underline; text-decoration-color: #52525b; text-underline-offset: 4px; }
+
+    /* Tags */
+    .entry-tags {
+      margin-bottom: 16px;
+      line-height: 2;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      margin-right: 4px;
+      margin-bottom: 4px;
     }
-    .badge-platform { background: #1f6feb; color: #e6edf3; }
-    .badge-tier-live { background: #196c2e; color: #3fb950; }
-    .badge-tier-archive7d { background: #9e6a03; color: #d29922; }
-    .badge-tier-archive30d { background: #6e40c9; color: #bc8cff; }
-    .badge-tier-partial { background: #8d1519; color: #f85149; }
-    .badge-pain {
-      background: #21262d;
-      color: #8b949e;
-      border: 1px solid #30363d;
+
+    /* Platform — distinct colors */
+    .tag-reddit { background: #2a1508; color: #fb923c; }
+    .tag-hackernews { background: #27200a; color: #facc15; }
+    .tag-devto { background: #1e1533; color: #c084fc; }
+    .tag-lobsters { background: #2a0a0a; color: #f87171; }
+    .tag-platform { background: #172554; color: #60a5fa; }
+
+    /* Tier */
+    .tag-live { background: #052e16; color: #4ade80; }
+    .tag-archive7d { background: #1c1917; color: #a8a29e; }
+    .tag-archive30d { background: #1e1533; color: #a78bfa; }
+    .tag-partial { background: #2a0a0a; color: #f87171; }
+
+    /* Pain category */
+    .tag-pain {
+      background: #09090b;
+      color: #a1a1aa;
+      border: 1px solid #27272a;
     }
-    .score-chip {
-      font-size: 12px;
-      color: #79c0ff;
-      font-family: monospace;
-    }
+
+    /* Body excerpt */
     .entry-body {
-      margin-top: 12px;
-      color: #8b949e;
-      font-size: 13px;
-      line-height: 1.5;
+      color: #a1a1aa;
+      font-size: 14px;
+      line-height: 1.65;
+      padding-top: 16px;
+      border-top: 1px solid #27272a;
     }
 
-    .partial-banner {
-      background: #161b22;
-      border: 1px solid #8d1519;
-      border-left: 4px solid #f85149;
-      border-radius: 8px;
-      padding: 14px 18px;
-      margin-bottom: 20px;
-      color: #f85149;
-      font-size: 13px;
-    }
-
+    /* ── Footer ─────────────────────────────────── */
     .footer {
       text-align: center;
-      margin-top: 32px;
-      color: #484f58;
-      font-size: 12px;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #27272a;
     }
+    .footer p {
+      color: #52525b;
+      font-size: 13px;
+      margin: 0 0 4px;
+    }
+    .footer a { color: #71717a; font-size: 12px; }
 
+    /* ── Light mode ─────────────────────────────── */
     @media (prefers-color-scheme: light) {
-      body { background: #ffffff; color: #24292f; }
-      .header { background: linear-gradient(135deg, #f6f8fa, #eaeef2); border-color: #d0d7de; }
-      .entry { background: #f6f8fa; border-color: #d0d7de; }
-      .badge-pain { background: #f6f8fa; color: #57606a; }
+      body { background: #ffffff; color: #09090b; }
+      .header { border-bottom-color: #e4e4e7; }
+      .header h1 { color: #09090b; }
+      .header .subtitle { color: #71717a; }
+      .header .subtitle strong { color: #09090b; }
+      .stats-card { background: #fafafa; border-color: #e4e4e7; }
+      .stat-value { color: #09090b; }
+      .stat-label { color: #71717a; }
+      .stat-divider { background: #e4e4e7; }
+      .entry { background: #fafafa; border-color: #e4e4e7; }
+      .entry:hover { border-color: #d4d4d8; }
+      .entry-title, .entry-title a { color: #09090b; }
+      .score-pill { background: #ffffff; border-color: #e4e4e7; color: #09090b; }
+      .rank-pill { background: #f4f4f5; color: #52525b; }
+      .entry-rank-1 .rank-pill { background: #fef3c7; color: #92400e; }
+      .tag-pain { background: #fafafa; color: #52525b; border-color: #e4e4e7; }
+      .entry-body { color: #52525b; border-top-color: #e4e4e7; }
+      .partial-banner { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+      .partial-banner strong { color: #78350f; }
+      .footer { border-top-color: #e4e4e7; }
+      a { color: #09090b; text-decoration-color: #d4d4d8; }
     }
   </style>
 </head>
@@ -135,14 +249,42 @@
 
   <!-- Header -->
   <div class="header">
-    <h1>🛰 OSS Radar Daily Intel</h1>
-    <p class="subtitle">{{ date_str }} &nbsp;·&nbsp; {{ report.entry_count }} signal{{ 's' if report.entry_count != 1 else '' }} detected</p>
+    <span class="header-icon">🛰️</span>
+    <h1>OSS Radar Daily Intel</h1>
+    <p class="subtitle">{{ date_str }} &nbsp;·&nbsp; <strong>{{ report.entry_count }}</strong> signal{{ 's' if report.entry_count != 1 else '' }} detected</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-card">
+    <table class="stats-table">
+      <tr>
+        <td>
+          <span class="stat-value">{{ report.total_collected or 0 }}</span>
+          <span class="stat-label">Collected</span>
+        </td>
+        <td class="stat-divider"></td>
+        <td>
+          <span class="stat-value">{{ report.total_after_filter or 0 }}</span>
+          <span class="stat-label">Filtered</span>
+        </td>
+        <td class="stat-divider"></td>
+        <td>
+          <span class="stat-value">{{ report.entry_count }}</span>
+          <span class="stat-label">Reported</span>
+        </td>
+        <td class="stat-divider"></td>
+        <td>
+          {% set scraper_count = report.scraper_statuses | length if report.scraper_statuses else 0 %}
+          <span class="stat-value">{{ scraper_count }}</span>
+          <span class="stat-label">Sources</span>
+        </td>
+      </tr>
+    </table>
   </div>
 
   {% if report.is_partial %}
   <div class="partial-banner">
-    ⚠️ <strong>Partial Report</strong> — fewer than 5 qualifying posts were found today.
-    Items below may include archived signals from the past 30 days.
+    ⚠️ <strong>Partial report</strong> — fewer than 5 qualifying signals found. Backfill from archived data was used.
   </div>
   {% endif %}
 
@@ -150,53 +292,83 @@
   {% set entries = report.entries or report.top_posts %}
   {% for post in entries %}
   {% set rank = loop.index %}
-  <div class="entry">
-    <div>
-      <span class="rank-badge">
-        {%- if rank == 1 %}🥇{%- elif rank == 2 %}🥈{%- elif rank == 3 %}🥉{%- else %}#{{ rank }}{%- endif %}
-      </span>
-      <a class="entry-title" href="{{ post.url }}">{{ post.title | truncate(90) }}</a>
-    </div>
+  <div class="entry entry-rank-{{ rank }}">
+    <div class="entry-inner">
 
-    <div class="entry-meta">
-      <span class="badge badge-platform">{{ post.platform }}</span>
+      <!-- Rank + Score -->
+      <div class="entry-topbar">
+        <table><tr>
+          <td style="text-align:left;">
+            <span class="rank-pill">#{{ rank }}</span>
+          </td>
+          <td style="text-align:right;">
+            <span class="score-pill">{{ "%.2f"|format(post.final_score or post.signal_score) }}</span>
+          </td>
+        </tr></table>
+      </div>
 
-      {% set tier = post.source_tier or post.backfill_source or 'live' %}
-      {% if tier == 'live' %}
-        <span class="badge badge-tier-live">live</span>
-      {% elif tier == 'archive-7d' or tier == 'archive_7d' %}
-        <span class="badge badge-tier-archive7d">archive-7d</span>
-      {% elif tier == 'archive-30d' or tier == 'archive_30d' %}
-        <span class="badge badge-tier-archive30d">archive-30d</span>
+      <!-- Title -->
+      <div class="entry-title">
+        <a href="{{ post.url }}">{{ post.title | truncate(90) }}</a>
+      </div>
+
+      <!-- Tags -->
+      <div class="entry-tags">
+        {% set p = post.platform | lower %}
+        {% if p == 'reddit' %}
+          <span class="tag tag-reddit">{{ post.platform }}</span>
+        {% elif p in ('hackernews', 'hacker_news', 'hn') %}
+          <span class="tag tag-hackernews">{{ post.platform }}</span>
+        {% elif p in ('devto', 'dev.to', 'dev') %}
+          <span class="tag tag-devto">{{ post.platform }}</span>
+        {% elif p == 'lobsters' %}
+          <span class="tag tag-lobsters">{{ post.platform }}</span>
+        {% else %}
+          <span class="tag tag-platform">{{ post.platform }}</span>
+        {% endif %}
+
+        {% set tier = post.source_tier or post.backfill_source or 'live' %}
+        {% if tier == 'live' %}
+          <span class="tag tag-live">live</span>
+        {% elif tier == 'archive-7d' or tier == 'archive_7d' %}
+          <span class="tag tag-archive7d">archive · 7d</span>
+        {% elif tier == 'archive-30d' or tier == 'archive_30d' %}
+          <span class="tag tag-archive30d">archive · 30d</span>
+        {% else %}
+          <span class="tag tag-partial">partial</span>
+        {% endif %}
+
+        {% for cat in post.pain_categories[:3] %}
+          <span class="tag tag-pain">{{ (cat.value if cat.value is defined else cat) | replace('_', ' ') }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Body -->
+      {% if post.llm_summary %}
+      <div class="entry-body">{{ post.llm_summary }}</div>
       {% else %}
-        <span class="badge badge-tier-partial">partial</span>
+      {% set excerpt = (post.body or '')[:220] %}
+      {% if excerpt %}
+      <div class="entry-body">{{ excerpt }}{% if (post.body or '') | length > 220 %}…{% endif %}</div>
+      {% endif %}
       {% endif %}
 
-      {% for cat in post.pain_categories[:3] %}
-        <span class="badge badge-pain">{{ cat.value if cat.value is defined else cat }}</span>
-      {% endfor %}
-
-      <span class="score-chip">⚡ {{ "%.2f"|format(post.final_score or post.signal_score) }}</span>
     </div>
-
-    {% if post.llm_summary %}
-    <div class="entry-body">{{ post.llm_summary }}</div>
-    {% else %}
-    {% set excerpt = (post.body or '')[:120] %}
-    {% if excerpt %}
-    <div class="entry-body">{{ excerpt }}{% if (post.body or '') | length > 120 %}…{% endif %}</div>
-    {% endif %}
-    {% endif %}
   </div>
   {% else %}
-  <div class="entry" style="text-align:center; color:#484f58;">
-    No qualifying posts found for this period.
+  <div class="entry">
+    <div class="entry-inner" style="text-align:center; color:#52525b; padding:40px 24px;">
+      No qualifying signals found for this period.
+    </div>
   </div>
   {% endfor %}
 
+  <!-- Footer -->
   <div class="footer">
-    <p>OSS Radar &nbsp;·&nbsp; Generated {{ date_str }} &nbsp;·&nbsp; <a href="https://github.com">Unsubscribe</a></p>
+    <p>🛰️ OSS Radar · Autonomous Signal Intelligence</p>
+    <p><a href="https://github.com/DUBSOpenHub/ghost-ops">Powered by Ghost Ops</a></p>
   </div>
+
 </div>
 </body>
 </html>
