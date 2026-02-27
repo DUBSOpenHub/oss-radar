@@ -73,6 +73,14 @@ class Settings(BaseSettings):
 
     # ── Field validators ──────────────────────────────────────────────────────
 
+    @field_validator("smtp_port", mode="before")
+    @classmethod
+    def parse_smtp_port(cls, v: object) -> int:
+        """Treat empty string as default (587) — unset GitHub secrets resolve to ''."""
+        if isinstance(v, str) and v.strip() == "":
+            return 587
+        return int(v)
+
     @field_validator("email_to", mode="before")
     @classmethod
     def parse_email_list(cls, v: object) -> List[str]:
@@ -128,16 +136,12 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_smtp_when_email_enabled(self) -> "Settings":
-        """SMTP credentials required when EMAIL_ENABLED=true."""
+        """Recipients required when EMAIL_ENABLED=true."""
         if self.email_enabled:
             recipients = self.email_to or ([self.to_email] if self.to_email else [])
             if not recipients:
                 raise ValueError(
                     "RADAR_EMAIL_TO (or RADAR_TO_EMAIL) required when EMAIL_ENABLED=true"
-                )
-            if self.smtp_host in ("localhost", "127.0.0.1", "") and not self.smtp_user:
-                raise ValueError(
-                    "RADAR_SMTP_HOST and RADAR_SMTP_USER required when EMAIL_ENABLED=true"
                 )
         return self
 
