@@ -44,11 +44,9 @@ class TestLLMBackendDryRun:
         assert result.model == "stub"
         assert result.tokens_in == 0
 
-    def test_dry_run_async(self):
+    async def test_dry_run_async(self):
         backend = LLMBackend(dry_run=True)
-        result = asyncio.run(
-            backend.complete([{"role": "user", "content": "test"}])
-        )
+        result = await backend.complete([{"role": "user", "content": "test"}])
         assert result.content == "[DRY-RUN] No LLM call made."
 
 

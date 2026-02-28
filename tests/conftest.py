@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import os
+import random
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 import pytest
@@ -12,6 +13,36 @@ import pytest
 # Ensure no real env vars bleed in during tests
 os.environ.setdefault("RADAR_EMAIL_ENABLED", "false")
 os.environ.setdefault("RADAR_REDDIT_ENABLED", "false")
+
+# ─── Anti-Flake Guardrails ───
+
+FROZEN_TIME = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture(autouse=True)
+def _deterministic_seed():
+    """Reset random seed before every test to prevent ordering-dependent flakes."""
+    random.seed(42)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _freeze_time(monkeypatch):
+    """Freeze datetime.now()/utcnow() to a deterministic value."""
+    import datetime as dt_module
+
+    _real_datetime = datetime
+
+    class FrozenDatetime(_real_datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return FROZEN_TIME
+
+        @classmethod
+        def utcnow(cls):
+            return FROZEN_TIME.replace(tzinfo=None)
+
+    monkeypatch.setattr(dt_module, "datetime", FrozenDatetime)
 
 
 @pytest.fixture()
