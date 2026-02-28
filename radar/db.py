@@ -84,6 +84,22 @@ class CatalogDB:
         )
         self._conn.commit()
 
+        # Migrations: add columns that may be missing from older schemas
+        _migrations = [
+            ("reports", "source_tier", "TEXT DEFAULT 'live'"),
+            ("report_entries", "signal_score", "REAL DEFAULT 0.0"),
+            ("report_entries", "source_tier", "TEXT DEFAULT 'live'"),
+            ("report_entries", "url", "TEXT DEFAULT ''"),
+            ("report_entries", "title", "TEXT DEFAULT ''"),
+            ("report_entries", "platform", "TEXT DEFAULT ''"),
+        ]
+        for table, col, col_type in _migrations:
+            try:
+                self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+        self._conn.commit()
+
     def close(self) -> None:
         if self._conn:
             self._conn.close()
