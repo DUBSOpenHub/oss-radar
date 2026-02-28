@@ -151,9 +151,10 @@ class TestDailyTemplateRendering:
             "daily.html.j2",
             {"report": daily_report_full, "date_str": "2024-01-15"},
         )
-        assert "🥇" in html
-        assert "🥈" in html
-        assert "🥉" in html
+        assert "rank-pill"  in html
+        assert "#1" in html
+        assert "#2" in html
+        assert "#3" in html
 
     def test_empty_report_renders(self, mock_settings):
         from radar.email.sender import EmailSender
