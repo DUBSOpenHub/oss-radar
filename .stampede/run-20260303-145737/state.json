@@ -1,0 +1,27 @@
+{
+  "run_id": "run-20260303-145737",
+  "base": "/Users/greggcochran/dev/oss-radar/.stampede/run-20260303-145737",
+  "objective": "Security audit of all features in oss-radar",
+  "repo_path": "/Users/greggcochran/dev/oss-radar",
+  "model": "claude-sonnet-4.5",
+  "worker_count": 8,
+  "total_tasks": 8,
+  "phase": "running",
+  "tasks": {
+    "queued": [
+      "task-001",
+      "task-002",
+      "task-003",
+      "task-004",
+      "task-005",
+      "task-006",
+      "task-007",
+      "task-008"
+    ],
+    "claimed": [],
+    "completed": []
+  },
+  "workers": [],
+  "updated_at": "2026-03-03T23:00:45Z",
+  "sealed_hash": "88cb0b02bc80988f0dace737a032b83890e88bd4914fe1cefaa3d305e537d984"
+}
