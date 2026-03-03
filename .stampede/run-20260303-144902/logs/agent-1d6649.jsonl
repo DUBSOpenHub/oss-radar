@@ -1,0 +1,2 @@
+{"ts": "2026-03-03T22:53:09Z", "agent_id": "agent-1d6649", "event": "task_complete", "task_id": "task-007"}
+{"ts": "2026-03-03T22:53:24Z", "agent_id": "agent-1d6649", "event": "shutdown", "reason": "queue_empty"}
