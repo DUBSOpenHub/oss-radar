@@ -1,0 +1,2 @@
+{"ts": "2026-03-03T18:31:19Z", "worker_id": "worker-25606e", "event": "task_complete", "task_id": "task-004"}
+{"ts": "2026-03-03T18:31:33Z", "worker_id": "worker-25606e", "event": "shutdown", "reason": "task_complete"}

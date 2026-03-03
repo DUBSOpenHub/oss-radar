@@ -1,0 +1,2 @@
+{"ts": "2026-03-03T22:42:43Z", "agent_id": "agent-c0d0db", "event": "startup"}
+{"ts": "2026-03-03T22:44:54Z", "agent_id": "agent-c0d0db", "event": "shutdown", "reason": "queue_empty"}

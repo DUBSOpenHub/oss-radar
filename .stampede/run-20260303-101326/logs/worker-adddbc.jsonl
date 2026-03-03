@@ -1,0 +1,2 @@
+{"ts": "2026-03-03T18:33:05Z", "worker_id": "worker-adddbc", "event": "task_complete", "task_id": "task-003", "status": "done"}
+{"ts": "2026-03-03T18:33:46Z", "worker_id": "worker-adddbc", "event": "shutdown", "reason": "queue_empty"}
