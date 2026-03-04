@@ -92,8 +92,10 @@ def daily(
     _setup_logging(log_level)
     cfg = _get_settings(db_path=db_path, log_level=log_level)
     if no_email:
-        # Monkey-patch email_enabled off
-        object.__setattr__(cfg, "email_enabled", False)
+        # Create a new Settings instance with email disabled (preserves validation)
+        cfg_dict = cfg.model_dump()
+        cfg_dict["email_enabled"] = False
+        cfg = type(cfg)(**cfg_dict)
 
     if db_path:
         # Legacy path: use PipelineOrchestrator (keeps existing engineer tests working)
@@ -164,7 +166,10 @@ def weekly(
     _setup_logging(log_level)
     cfg = _get_settings(db_path=db_path, log_level=log_level)
     if no_email:
-        object.__setattr__(cfg, "email_enabled", False)
+        # Create a new Settings instance with email disabled (preserves validation)
+        cfg_dict = cfg.model_dump()
+        cfg_dict["email_enabled"] = False
+        cfg = type(cfg)(**cfg_dict)
 
     db = _open_db(cfg.db_path)
 
@@ -206,7 +211,7 @@ def validate(
     try:
         import httpx
 
-        r = httpx.get("https://hn.algolia.com/api/v1/search?query=test&hitsPerPage=1", timeout=10)
+        r = httpx.head("https://hn.algolia.com/api/v1/", timeout=10)
         r.raise_for_status()
         checks.append(("HN API", "✅", "Reachable"))
     except Exception as exc:

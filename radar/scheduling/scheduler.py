@@ -49,16 +49,21 @@ class RadarScheduler:
             raise ValueError(f"Invalid scrape_cron: {self.config.scrape_cron!r}")
 
         minute, hour, day, month, day_of_week = cron_parts
-        self._scheduler.add_job(
-            func=self._run_scrape,
-            trigger=CronTrigger(
+        try:
+            trigger = CronTrigger(
                 minute=minute,
                 hour=hour,
                 day=day,
                 month=month,
                 day_of_week=day_of_week,
                 timezone="UTC",
-            ),
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid scrape_cron {self.config.scrape_cron!r}: {e}")
+
+        self._scheduler.add_job(
+            func=self._run_scrape,
+            trigger=trigger,
             id="hourly_scrape",
             name="OSS Radar Hourly Scrape",
             replace_existing=True,
@@ -71,16 +76,21 @@ class RadarScheduler:
             raise ValueError(f"Invalid daily_cron: {self.config.daily_cron!r}")
 
         minute, hour, day, month, day_of_week = cron_parts
-        self._scheduler.add_job(
-            func=self._run_daily,
-            trigger=CronTrigger(
+        try:
+            trigger = CronTrigger(
                 minute=minute,
                 hour=hour,
                 day=day,
                 month=month,
                 day_of_week=day_of_week,
                 timezone="UTC",
-            ),
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid daily_cron {self.config.daily_cron!r}: {e}")
+
+        self._scheduler.add_job(
+            func=self._run_daily,
+            trigger=trigger,
             id="daily_report",
             name="OSS Radar Daily Report",
             replace_existing=True,
@@ -93,16 +103,21 @@ class RadarScheduler:
             raise ValueError(f"Invalid weekly_cron: {self.config.weekly_cron!r}")
 
         minute, hour, day, month, day_of_week = cron_parts
-        self._scheduler.add_job(
-            func=self._run_weekly,
-            trigger=CronTrigger(
+        try:
+            trigger = CronTrigger(
                 minute=minute,
                 hour=hour,
                 day=day,
                 month=month,
                 day_of_week=day_of_week,
                 timezone="UTC",
-            ),
+            )
+        except ValueError as e:
+            raise ValueError(f"Invalid weekly_cron {self.config.weekly_cron!r}: {e}")
+
+        self._scheduler.add_job(
+            func=self._run_weekly,
+            trigger=trigger,
             id="weekly_digest",
             name="OSS Radar Weekly Digest",
             replace_existing=True,

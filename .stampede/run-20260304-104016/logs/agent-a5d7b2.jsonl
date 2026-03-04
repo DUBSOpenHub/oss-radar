@@ -1,0 +1,6 @@
+{"ts": "2026-03-04T18:42:10Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 1, "max_idle": 24}
+{"ts": "2026-03-04T18:42:15Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 2, "max_idle": 24}
+{"ts": "2026-03-04T18:42:20Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 3, "max_idle": 24}
+{"ts": "2026-03-04T18:42:25Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 4, "max_idle": 24}
+{"ts": "2026-03-04T18:42:30Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 5, "max_idle": 24}
+{"ts": "2026-03-04T18:42:35Z", "agent_id": "agent-a5d7b2", "event": "idle", "idle_round": 6, "max_idle": 24}
