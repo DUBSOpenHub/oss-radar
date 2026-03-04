@@ -1,0 +1,25 @@
+{
+  "task_id": "task-006",
+  "run_id": "run-20260304-104016",
+  "agent_id": "agent-17f92b",
+  "status": "done",
+  "generation": 0,
+  "branch": "main",
+  "files_changed": [],
+  "summary": "ORCHESTRATION AUDIT: radar/pipeline.py & radar/ladder.py\n\nFINDINGS SUMMARY\n\nReviewed both files for orchestration correctness, error handling, graceful degradation, and exit code logic.\n\nCRITICAL FINDINGS (6 issues)\n\n1. CRIT-001: run_daily() docstring promises SystemExit(1) on partial results but never raises\u2014only returns DailyReport.is_partial. Contract violation; callers won't map is_partial \u2192 exit 1.\n\n2. CRIT-002: ladder.py _fetch_archive_7d() and _fetch_archive_30d() are stub implementations returning []. The 4-tier backfill strategy is non-functional; archive fallback completely disabled.\n\n3. CRIT-003: _collect() returns ([], {all: 'failed'}) if all scrapers fail. No distinction between infrastructure failure and slow news day. Statuses logged but not checked.\n\n4. CRIT-004: is_partial reports still sent without minimum coverage threshold. Single-post reports marked 'sent'. No circuit-breaker for degraded states.\n\n5. CRIT-005: ladder.py partial tier logic contradicts archive tiers. Only posts tagged 'live' marked partial; archive posts remain marked even if final count < 5.\n\n6. CRIT-006: BackfillManager dedup incomplete on rung 2. Rungs 3 & 4 have dedup; rung 2 extends without checking. Same post could appear twice.\n\nHIGH PRIORITY FINDINGS (4 issues)\n\n- HIGH-001: run_scrape_only() returns only count, no statuses. Caller blind to scraper health.\n- HIGH-002: PipelineOrchestrator constructor validates nothing. Failures surface at runtime, no fail-fast.\n- HIGH-003: get_five() can return [] without exception. Caller must handle empty result edge case.\n- HIGH-004: LLM summarization failure silently degrades. Email sent without summaries, no client indication.\n\nMEDIUM PRIORITY FINDINGS (4 issues)\n\n- MED-001: Two incompatible backfill implementations (BackfillManager vs FallbackLadder) with different models and dedup logic.\n- MED-002: Three identical tier assignments per rung (source_tier, provenance, backfill_source). Redundant and confusing.\n- MED-003: Deprecated datetime.utcnow() used; will break on Python 3.12+.\n- MED-004: Archive fetch stubs return [] with no error signal. Caller can't distinguish \"not implemented\" from \"empty cache\".\n\nGRACEFUL DEGRADATION GAPS\n\n- No distinction between \"no posts\" and \"collection failed\"\n- Archive fallback non-functional; strategy disabled\n- Single-post reports sent without escalation\n- Tier semantics contradictory when final count < 5\n- No rollback if email send fails after DB commit\n\nEXIT CODE SEMANTICS ISSUE\n\nDocumented: run_daily() \"Raises SystemExit(1) on partial result\"\nActual: Returns DailyReport; caller must check is_partial\nIssue: Contract mismatch; responsibility unclear between callee and caller\n\nRECOMMENDATIONS (Priority Order)\n\nP0 (Blocking):\n1. Implement ladder._fetch_archive_7d/30d() or raise NotImplementedError\n2. Fix partial tier logic: mark ALL posts as partial if < TARGET\n3. Add min_viable_count threshold (suggest 2); refuse to send if breached\n4. Document exit code responsibility: caller maps is_partial \u2192 exit 1\n\nP1 (High-impact):\n1. Consolidate BackfillManager and FallbackLadder implementations\n2. Add PipelineOrchestrator.validate() or fail-fast constructor\n3. Refactor _collect() to return (posts, statuses, is_fatal); check is_fatal\n4. Add summaries_failed flag to DailyReport for transparency\n\nP2 (Nice-to-have):\n1. Migrate to datetime.now(timezone.utc)\n2. Consolidate tier fields (single source_tier; remove redundant fields)\n3. Add explicit error signals for archive stubs\n4. Add monitoring hooks for scraper and archive health\n",
+  "word_count": 464,
+  "completed_at": "2026-03-04T18:43:13Z",
+  "audit_results": {
+    "critical_count": 6,
+    "high_count": 4,
+    "medium_count": 4,
+    "total_findings": 14,
+    "primary_issues": [
+      "Exit code contract mismatch (docstring vs implementation)",
+      "Archive fallback stubs non-functional",
+      "Graceful degradation gaps: no circuit-breaker for single-post reports",
+      "Tier semantics contradictory when partial",
+      "Two incompatible backfill implementations (maintenance debt)"
+    ]
+  }
+}
