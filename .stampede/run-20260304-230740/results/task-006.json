@@ -1,0 +1,14 @@
+{
+  "task_id": "task-006",
+  "run_id": "run-20260304-230740",
+  "agent_id": "agent-06340e",
+  "status": "done",
+  "generation": 0,
+  "branch": "stampede/task-002",
+  "files_changed": [
+    "tests/test_filter_ladder_extended.py"
+  ],
+  "summary": "Created tests/test_filter_ladder_extended.py with 29 comprehensive tests across 6 test classes:\n\n1. TestFilterBoundaries (7 tests): Tests for posts that barely pass/fail each filter layer, including keyword single match, maintainer signals, and sentiment threshold boundaries (exactly at -0.05, just below, just above).\n\n2. TestMaintainerSignalCombinations (4 tests): Tests for multiple maintainer signals, GitHub username in URL detection, case-insensitive signals, and signals across title/body.\n\n3. TestSignalFilterDictAPI (5 tests): Tests for the SignalFilter facade working with plain dicts, including empty list handling, passing posts, maintainer_signals list checking, fallback to regex scan, and sentiment computation.\n\n4. TestLadderFallbackLogic (6 tests): Tests for the backfill ladder fallback chain (live \u2192 archive-7d \u2192 archive-30d \u2192 partial), including zero posts, exactly five live posts, partial live fills from archive tiers, URL deduplication, and partial tier marking.\n\n5. TestEmptyCandidateLists (5 tests): Tests for all filters handling empty input gracefully.\n\n6. TestPainCategoryEdgeCases (2 tests): Tests for multiple categories in one post and pain_score increasing with matches.\n\nAll existing tests (21 in test_filter.py) continue to pass. Total: 50 filter tests passing.",
+  "word_count": 168,
+  "completed_at": "2026-03-05T07:17:16Z"
+}

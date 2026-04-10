@@ -243,8 +243,7 @@ def validate(
         table.add_row(name, status, detail)
     console.print(table)
 
-    # Exit 0 if config loaded OK; network/connectivity failures are informational
-    raise typer.Exit(0)
+    raise typer.Exit(0 if all_ok else 1)
 
 
 @app.command()

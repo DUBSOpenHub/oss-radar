@@ -1,0 +1,14 @@
+{
+  "task_id": "task-008",
+  "run_id": "run-20260304-230740",
+  "agent_id": "agent-ed4f52",
+  "status": "done",
+  "generation": 0,
+  "branch": "stampede/task-007",
+  "files_changed": [
+    "tests/test_email_llm_synth_extended.py"
+  ],
+  "summary": "Created tests/test_email_llm_synth_extended.py with 26 comprehensive tests covering email, LLM, and synthetic modules.\n\nTest Coverage:\n\nEmail Tests (9 tests):\n- SMTP connection failure retries twice before sendmail fallback\n- SMTP authentication failures trigger fallback\n- Invalid/empty recipients return False gracefully\n- Template rendering with empty entries\n- StrictUndefined enforcement for missing template variables\n- Legacy Mailer module SMTP failure handling\n\nLLM Tests (7 tests):\n- GitHub Models timeout falls back to Amplifier CLI\n- Both backends fail \u2192 RuntimeError with error chain\n- complete_sync() works in non-async context\n- GitHub Models subprocess failure handling\n- Dry-run mode returns stub responses (async and sync wrappers)\n\nSummarizer Tests (2 tests):\n- LLM failure falls back to 120-char body excerpt\n- Empty body returns empty excerpt\n\nSynthetic Tests (8 tests):\n- Same seed produces identical output (deterministic)\n- Different seeds produce different output\n- Generated batch includes maintainer first-person language\n- Calibrated mix with pain keyword hits (70%+) and failures (5%+)\n- All URLs unique across batch\n- url_hash SHA-256 populated for all posts\n- Multiple platforms represented (Reddit, HN, etc.)\n- Platform distribution roughly balanced (>=10% each)\n\nAll tests mock SMTP and subprocess calls. All 26 tests pass. Existing tests (51) continue passing. Total: 77 passing tests.",
+  "word_count": 204,
+  "completed_at": "2026-03-05T07:19:43Z"
+}
